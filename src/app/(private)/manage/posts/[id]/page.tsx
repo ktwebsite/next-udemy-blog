@@ -1,4 +1,3 @@
-import { getPost } from "@/lib/post"
 import { notFound } from "next/navigation"
 import {
   Card,
@@ -9,6 +8,8 @@ import {
 import Image from "next/image"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
+import { getOwnPost } from "@/lib/ownPost"
+import { auth } from "@/auth"
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -17,10 +18,14 @@ import "highlight.js/styles/github.css"; //
 type Params = {
   params: Promise<{id: string}>
 }
-export default async function PostPage({params} : Params) {
+export default async function ShowPage({params} : Params) {
+  const session = await auth()
+  const userId = session?.user?.id
+  if(!session?.user?.email || !userId){
+    throw new Error("不正なリクエストです")
+  }
   const {id} = await params
-  const post = await getPost(id)
-
+  const post = await getOwnPost(userId,id)
   if(!post){
     notFound()
   }
@@ -66,3 +71,5 @@ export default async function PostPage({params} : Params) {
     </div>
   )
 }
+
+
